@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  todos:
+    build:
+      context: .
+    image: todos:local
+    ports:
+      - "7070:80"
+    depends_on:
+    - db
+
+  db:
+    image: mariadb
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: true
+      MARIADB_USER: test
+      MARIADB_DATABASE: test
+      MARIADB_PASSWORD: test
+    volumes:
+      - ./database/startup:/docker-entrypoint-initdb.d
+
+
+  db-admin:
+    image: adminer
+    ports:
+      - "7090:8080"
+    depends_on:
+    - db
