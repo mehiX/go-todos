@@ -162,3 +162,27 @@ func searchByTag(svc Service) http.HandlerFunc {
 		}
 	}
 }
+
+func completeTodo(svc Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		t, ok := r.Context().Value(TodoCtxKey).(*Todo)
+		if !ok || t == nil {
+			log.Println("no todo from request context")
+			handleError(w, fmt.Errorf("not found"), http.StatusNotFound)
+			return
+		}
+
+		completed, err := svc.MarkCompleted(r.Context(), *t)
+		if err != nil {
+			log.Printf("Marking a todo completed: %v\n", err)
+			handleError(w, fmt.Errorf("could not complete todo"), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(w).Encode(completed); err != nil {
+			log.Printf("Encoding completed todo: %v\n", err)
+			handleError(w, err, http.StatusInternalServerError)
+		}
+	}
+}

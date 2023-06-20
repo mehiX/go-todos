@@ -9,7 +9,7 @@ create table todos (
 );
 
 create view v_todos as 
-    select id, title, tags
+    select id, title, tags, completed_at
     from todos
 ;
 

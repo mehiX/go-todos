@@ -28,11 +28,13 @@ func Handler(svc Service) http.Handler {
 		//r.Get("/completed", listCompletedTodos(svc))
 		r.Get("/search/tags", searchByTag(svc)) // ?q=tag1,tag2,tag3
 
-		r.Route("/{id:[0-9a-zA-Z-]+}", func(r chi.Router) {
+		r.Route("/{id:[0-9a-z-]+}", func(r chi.Router) {
 			r.Use(TodoCtx(svc))
 			r.Get("/", getTodo(svc))
 			r.Put("/", updateTodo(svc))
 			r.Delete("/", deleteTodo(svc))
+
+			r.Post("/complete", completeTodo(svc))
 		})
 	})
 

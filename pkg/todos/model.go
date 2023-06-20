@@ -1,11 +1,15 @@
 package todos
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 type Todo struct {
-	ID    string   `json:"id"`
-	Title string   `json:"title"`
-	Tags  []string `json:"tags"`
+	ID          string     `json:"id"`
+	Title       string     `json:"title"`
+	Tags        []string   `json:"tags"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 
 // CleanTags returns a comma separated list of deduplicated tags (small caps)

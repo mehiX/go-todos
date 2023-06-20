@@ -11,28 +11,33 @@ import (
 	"github.com/mehix/go-todos/pkg/todos"
 )
 
-var addTodo = func(ctx context.Context, td todos.Todo) error {
+var addTodo = func(ctx context.Context, td todos.Todo) (todos.Todo, error) {
 	var payload bytes.Buffer
 	if err := json.NewEncoder(&payload).Encode(td); err != nil {
-		return err
+		return td, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, *apiURL+"/todos/", &payload)
 	if err != nil {
-		return err
+		return td, err
 	}
 	req.Header.Set("Content-type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return td, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("todo not created. Response: %d", resp.StatusCode)
+		return td, fmt.Errorf("todo not created. Response: %d", resp.StatusCode)
 	}
 
-	return nil
+	var newTd todos.Todo
+	if err := json.NewDecoder(resp.Body).Decode(&newTd); err != nil {
+		return todos.Todo{}, err
+	}
+
+	return newTd, nil
 }
 
 var totalTodos = func() (int, error) {

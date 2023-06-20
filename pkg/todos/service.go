@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
@@ -17,6 +18,7 @@ type Service interface {
 	Add(context.Context, Todo) (Todo, error)
 	Delete(context.Context, string) error
 	Update(context.Context, string, Todo) (Todo, error)
+	MarkCompleted(context.Context, Todo) (Todo, error)
 }
 
 type service struct {
@@ -76,7 +78,8 @@ func (s *service) Update(ctx context.Context, id string, t Todo) (Todo, error) {
 	return s.FindByID(ctx, id)
 }
 
-// FindByTags returns all the todo's that contain at least one of the provided flags
+// FindByTags returns all the todo's that contain at least one of the provided flags.
+// Launches a separate go routine for each tag and then collects the unique results.
 func (s *service) FindByTags(ctx context.Context, tags []string) ([]Todo, error) {
 
 	ch := make(chan Todo)
@@ -126,4 +129,16 @@ func (s *service) FindByTags(ctx context.Context, tags []string) ([]Todo, error)
 	}
 
 	return all, <-errs
+}
+
+func (s *service) MarkCompleted(ctx context.Context, t Todo) (Todo, error) {
+
+	now := time.Now()
+	t.CompletedAt = &now
+
+	if err := s.repo.Update(ctx, t.ID, t); err != nil {
+		return Todo{}, err
+	}
+
+	return s.repo.FindByID(ctx, t.ID)
 }

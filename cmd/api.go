@@ -20,7 +20,7 @@ import (
 )
 
 var addr = flag.String("http", "127.0.0.1:8080", "Address to serve HTTP")
-var dsn = flag.String("dsn", "test:test@tcp(127.0.0.1)/test", "Database connection string (MariaDB)")
+var dsn = flag.String("dsn", "test:test@tcp(127.0.0.1)/test?parseTime=true", "Database connection string (MariaDB)")
 
 func init() {
 	flag.Parse()

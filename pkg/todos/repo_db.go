@@ -3,6 +3,7 @@ package todos
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"strings"
 )
@@ -60,9 +61,13 @@ func (r *repositoryDB) Delete(ctx context.Context, id string) error {
 }
 
 func (r *repositoryDB) Update(ctx context.Context, id string, t Todo) error {
-	qry := "update todos set title = ? where id = ?"
+	fmt.Printf("Updated todo: %#v\n", t)
+	qry := "update todos set title = ?, tags = ?, completed_at = ? where id = ?"
 
-	_, err := r.conn.ExecContext(ctx, qry, t.Title, t.ID)
+	_, err := r.conn.ExecContext(ctx, qry, t.Title, t.CleanTags(), sql.NullTime{Time: *t.CompletedAt, Valid: t.CompletedAt != nil}, t.ID)
+	if err != nil {
+		fmt.Printf("Update error: %v", err)
+	}
 
 	return err
 }
@@ -100,15 +105,23 @@ type Scanner interface {
 
 func scan[T Scanner](r T) (Todo, error) {
 	var id, title, tags string
-	vals := []any{&id, &title, &tags}
+	var completedAt sql.NullTime
+	vals := []any{&id, &title, &tags, &completedAt}
 
 	if err := r.Scan(vals...); err != nil {
+		log.Printf("Scan error: %v\n", err)
 		return Todo{}, err
 	}
 
+	completedWhen := &completedAt.Time
+	if !completedAt.Valid {
+		completedWhen = nil
+	}
+
 	return Todo{
-		ID:    id,
-		Title: title,
-		Tags:  strings.Split(tags, ","),
+		ID:          id,
+		Title:       title,
+		Tags:        strings.Split(tags, ","),
+		CompletedAt: completedWhen,
 	}, nil
 }

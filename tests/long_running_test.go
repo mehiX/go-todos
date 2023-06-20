@@ -45,7 +45,7 @@ func TestAddMultipleConcurrent(t *testing.T) {
 				case <-gCtx.Done():
 					return gCtx.Err()
 				case <-time.Tick(time.Duration(rand.Int63n(200)+100) * time.Millisecond):
-					if err := addTodo(gCtx, todos.Todo{
+					if _, err := addTodo(gCtx, todos.Todo{
 						ID:    uuid.NewString(),
 						Title: fmt.Sprintf("Todo number %d", i+1)}); err != nil {
 						return err

@@ -11,7 +11,7 @@ FROM alpine:latest
 COPY --from=builder /go/bin/app /app
 
 ENTRYPOINT ["/app"]
-CMD ["--http", "0.0.0.0:80", "--dsn", "test:test@tcp(db)/test"]
+CMD ["--http", "0.0.0.0:80", "--dsn", "test:test@tcp(db)/test?parseTime=true"]
 
 LABEL Name=todos Version=0.0.1
 EXPOSE 80

@@ -18,9 +18,9 @@ func TestSearchByTags(t *testing.T) {
 		uuid.NewString(),
 	}
 
-	addTodo(ctx, todos.Todo{ID: uuid.NewString(), Title: "some title", Tags: []string{tags[0]}})
-	addTodo(ctx, todos.Todo{ID: uuid.NewString(), Title: "some title 2", Tags: []string{tags[0], tags[1]}})
-	addTodo(ctx, todos.Todo{ID: uuid.NewString(), Title: "some title 3", Tags: []string{tags[2]}})
+	addTodo(ctx, todos.Todo{Title: "some title", Tags: []string{tags[0]}})
+	addTodo(ctx, todos.Todo{Title: "some title 2", Tags: []string{tags[0], tags[1]}})
+	addTodo(ctx, todos.Todo{Title: "some title 3", Tags: []string{tags[2]}})
 
 	withTag1, err := byTags([]string{tags[0]})
 	if err != nil {
