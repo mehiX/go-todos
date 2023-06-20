@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"strings"
 )
 
 type repositoryDB struct {
@@ -43,9 +44,9 @@ func (r *repositoryDB) ListAll(ctx context.Context) ([]Todo, error) {
 }
 
 func (r *repositoryDB) Add(ctx context.Context, t Todo) error {
-	qry := "insert into todos (id, title) values (?, ?)"
+	qry := "insert into todos (id, title, tags) values (?, ?, ?)"
 
-	_, err := r.conn.ExecContext(ctx, qry, t.ID, t.Title)
+	_, err := r.conn.ExecContext(ctx, qry, t.ID, t.Title, t.CleanTags())
 
 	return err
 }
@@ -66,6 +67,32 @@ func (r *repositoryDB) Update(ctx context.Context, id string, t Todo) error {
 	return err
 }
 
+// FindByTag returns all Todo's that contain this tag
+// Logic should be improved, maybe refactoring the whole tags logic. At the moment it will return
+// entries containing `golang` when `go` is passed in as parameter
+func (r *repositoryDB) FindByTag(ctx context.Context, tg string) ([]Todo, error) {
+	qry := "select * from v_todos where tags like ?"
+
+	rows, err := r.conn.QueryContext(ctx, qry, "%"+tg+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var all []Todo
+	for rows.Next() {
+		td, err := scan(rows)
+		if err != nil {
+			return all, err
+		} else {
+			all = append(all, td)
+		}
+	}
+
+	return all, nil
+
+}
+
 // Scanner is a constraint that matches sql.Row and sql.Rows
 type Scanner interface {
 	Scan(...any) error
@@ -82,5 +109,6 @@ func scan[T Scanner](r T) (Todo, error) {
 	return Todo{
 		ID:    id,
 		Title: title,
+		Tags:  strings.Split(tags, ","),
 	}, nil
 }

@@ -1,12 +1,9 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"testing"
 	"time"
 
@@ -17,51 +14,6 @@ import (
 
 // workaround for: `flag provided but not defined: -test.paniconexit0` when passing arguments to the test binary
 var _ = func() bool { testing.Init(); return true }()
-
-var addTodo = func(ctx context.Context, td todos.Todo) error {
-	var payload bytes.Buffer
-	if err := json.NewEncoder(&payload).Encode(td); err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, *apiURL+"/todos/", &payload)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Todo not created. Response: %d", resp.StatusCode)
-	}
-
-	return nil
-}
-
-var totalTodos = func() (int, error) {
-	req, err := http.NewRequest(http.MethodGet, *apiURL+"/todos/", nil)
-	if err != nil {
-		return 0, err
-	}
-	req.Header.Set("Content-type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	var all []todos.Todo
-	if err := json.NewDecoder(resp.Body).Decode(&all); err != nil {
-		return 0, err
-	}
-
-	return len(all), nil
-}
 
 func TestAddMultipleConcurrent(t *testing.T) {
 	if testing.Short() {

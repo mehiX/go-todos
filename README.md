@@ -42,10 +42,12 @@ The list of provided endpoints is dynamically generated (no update needed if a n
 [GET]           /todos/
 [POST]          /todos/
 
+[GET]           /todos/search/tags
 
+
+[DELETE]        /todos/{id:[0-9a-zA-Z-]+}/
 [GET]           /todos/{id:[0-9a-zA-Z-]+}/
 [PUT]           /todos/{id:[0-9a-zA-Z-]+}/
-[DELETE]        /todos/{id:[0-9a-zA-Z-]+}/
 ```
 
 

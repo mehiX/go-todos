@@ -25,6 +25,9 @@ func Handler(svc Service) http.Handler {
 		r.Get("/", listTodos(svc))
 		r.Post("/", createTodo(svc))
 
+		//r.Get("/completed", listCompletedTodos(svc))
+		r.Get("/search/tags", searchByTag(svc)) // ?q=tag1,tag2,tag3
+
 		r.Route("/{id:[0-9a-zA-Z-]+}", func(r chi.Router) {
 			r.Use(TodoCtx(svc))
 			r.Get("/", getTodo(svc))

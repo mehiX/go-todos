@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"golang.org/x/exp/slices"
 )
 
 type repositoryMem struct {
@@ -75,4 +77,19 @@ func (r *repositoryMem) FindByID(_ context.Context, id string) (Todo, error) {
 	}
 
 	return td, nil
+}
+
+func (r *repositoryMem) FindByTag(_ context.Context, tg string) ([]Todo, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
+
+	all := make([]Todo, 0)
+
+	for _, v := range r.data {
+		if slices.Contains(v.Tags, tg) {
+			all = append(all, v)
+		}
+	}
+
+	return all, nil
 }

@@ -3,12 +3,16 @@ package todos
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 type Service interface {
 	FindByID(context.Context, string) (Todo, error)
+	FindByTags(context.Context, []string) ([]Todo, error)
 	ListAll(context.Context) ([]Todo, error)
 	Add(context.Context, Todo) (Todo, error)
 	Delete(context.Context, string) error
@@ -70,4 +74,56 @@ func (s *service) Update(ctx context.Context, id string, t Todo) (Todo, error) {
 	}
 
 	return s.FindByID(ctx, id)
+}
+
+// FindByTags returns all the todo's that contain at least one of the provided flags
+func (s *service) FindByTags(ctx context.Context, tags []string) ([]Todo, error) {
+
+	ch := make(chan Todo)
+	errs := make(chan error, 1)
+	unique := make(map[string]Todo)
+
+	g, gCtx := errgroup.WithContext(ctx)
+
+	for _, t := range tags {
+		t = strings.ToLower(strings.TrimSpace(t))
+		// https://golang.org/doc/faq#closures_and_goroutines
+		g.Go(func(t string) func() error {
+			return func() error {
+				tds, err := s.repo.FindByTag(ctx, t)
+				if err != nil {
+					return err
+				}
+				for _, td := range tds {
+					select {
+					case <-gCtx.Done():
+						return gCtx.Err()
+					case ch <- td:
+					}
+				}
+
+				return nil
+			}
+		}(t))
+	}
+
+	go func() {
+		defer close(ch)
+		if err := g.Wait(); err != nil {
+			log.Printf("Finding by tags: %v", err)
+			errs <- err
+		}
+		close(errs)
+	}()
+
+	for t := range ch {
+		unique[t.ID] = t
+	}
+
+	var all []Todo
+	for _, v := range unique {
+		all = append(all, v)
+	}
+
+	return all, <-errs
 }

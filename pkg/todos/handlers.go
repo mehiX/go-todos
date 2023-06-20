@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func handleError(w http.ResponseWriter, err error, status int) {
@@ -133,6 +134,30 @@ func updateTodo(svc Service) http.HandlerFunc {
 
 		if err := json.NewEncoder(w).Encode(updated); err != nil {
 			log.Printf("Encoding new todo: %v\n", err)
+			handleError(w, err, http.StatusInternalServerError)
+		}
+	}
+}
+
+func searchByTag(svc Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		tags := strings.Split(r.URL.Query().Get("q"), ",")
+		if len(tags) == 0 {
+			handleError(w, fmt.Errorf("provide a list of tags in the q query parameter"), http.StatusBadRequest)
+			return
+		}
+
+		withTag, err := svc.FindByTags(r.Context(), tags)
+		if err != nil {
+			log.Printf("searching by tags: %v\n", err)
+			handleError(w, fmt.Errorf("error searching by tags"), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(withTag); err != nil {
+			log.Printf("Encoding all: %v\n", err)
 			handleError(w, err, http.StatusInternalServerError)
 		}
 	}
