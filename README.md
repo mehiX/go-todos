@@ -31,6 +31,24 @@ go test -v -cover -coverprofile=cover.out ./pkg/todos/...
 go tool cover -html=cover.out
 ```
 
+## Endpoints provided
+
+The list of provided endpoints is dynamically generated (no update needed if a new pattern + handler is added) and printed when the program starts.
+
+```
+[GET]           /health
+
+
+[GET]           /todos/
+[POST]          /todos/
+
+
+[GET]           /todos/{id:[0-9a-zA-Z-]+}/
+[PUT]           /todos/{id:[0-9a-zA-Z-]+}/
+[DELETE]        /todos/{id:[0-9a-zA-Z-]+}/
+```
+
+
 ## Build and run
 
 ```shell
