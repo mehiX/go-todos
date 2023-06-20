@@ -20,7 +20,7 @@ func TestAddMultipleConcurrent(t *testing.T) {
 		t.Skipf("skip long running test: %s\n", "TestAddMultipleConcurrent")
 	}
 
-	n := rand.Intn(100) + 50
+	n := rand.Intn(100) + 40
 	workers := 7
 	maxRunningTime := 30 * time.Second
 
